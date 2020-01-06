@@ -14,23 +14,23 @@ $gray-base: #ccc !default;
 $black:    #000 !default;
 $white:    #ffffff !default;
 
-$blue:    #1177d1 !default;
+$blue:    #75CAEB !default;
 $indigo:  #6610f2 !default;
 $purple:  #613d7c !default;
 $pink:    #e83e8c !default;
-$red:     #d9534f !default;
-$orange:  #f0ad4e !default;
-$yellow:  #f7fb0f !default;
-$green:   #7fd80a !default;
-$teal:    #60e8b5 !default;
+$red:     #FF4136 !default;
+$orange:  #EB661E !default;
+$yellow:  #FF851B !default;
+$green:   #28B62C !default;
+$teal:    #0DA7AF !default;
 $cyan:    #5bc0de !default;
 
-$primary:       #0DA7AF !default;
-$secondary:     #EB661E !default;
+$primary:       $teal !default;
+$secondary:     $orange !default;
 $success:       $green !default;
-$info:          $cyan !default;
+$info:          $blue !default;
 $warning:       $yellow !default;
-$danger:        #c33e3e !default;
+$danger:        $red !default;
 $light:         $gray-100 !default;
 $dark:          $gray-800 !default;
 
@@ -258,6 +258,10 @@ section#region-main {
 
 section#region-main .card, header#page-header .card {
     border: 0;
+}
+
+#page-header .btn.btn-secondary{
+    background-color: $gray-800!importante;
 }
 
 .studentdash .btn, .teacherdash .btn, .enrollcodes .btn, .siteadminlink .btn {
