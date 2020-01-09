@@ -671,3 +671,16 @@ div#fordsonlogin {
     display: block;
     float: none; 
 }
+
+
+/*questions*/
+.qnbutton{
+    background-color: $gray-200!important;
+    border-color: $gray-300!important;
+    border-bottom: 3px solid $gray-600!important;
+    color: $gray-600!important;
+    margin-right: 2px;
+    border-radius: 4px;
+
+    
+}
