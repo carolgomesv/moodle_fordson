@@ -37,7 +37,7 @@ class theme_fordson_core_badges_renderer extends core_badges_renderer {
      *
      * @param \core_badges\output\badge_collection $badges
      * @return string
-     */
+     
     protected function render_badge_collection(\core_badges\output\badge_collection $badges) {
         $paging = new paging_bar($badges->totalcount, $badges->page, $badges->perpage, $this->page->url, 'page');
         $htmlpagingbar = $this->render($paging);
@@ -80,6 +80,7 @@ class theme_fordson_core_badges_renderer extends core_badges_renderer {
         //return $htmlpagingbar . $htmltable . $htmlpagingbar;
         return print_r($badges->badges);
     }
+    */
 
     /**
      * Render a collection of user badges.
@@ -104,22 +105,39 @@ class theme_fordson_core_badges_renderer extends core_badges_renderer {
             if ($badge->dateissued) {
                 $awarded = '<span class="badge badge-success">Obtido</span>';
             } else {
-                $imageurl= 'http://www.gravatar.com/avatar/3df2ab544a849802c49395512e21a339?s=100&d=mm';
+                $imageurl= 'http://10.10.2.24/egg/moodle/theme/image.php/fordson/theme/1578593667/badge_oculto';
                 $awarded = '<span class="badge badge-dark">Não obtido</span>';
+                $badgeurl= "#";
             }
             
             $novo_html.='<div class="card  dashboard-card"> <div class="card-body"><center>';
             $novo_html.='<a href="'.$badgeurl.'">';
             $novo_html.=html_writer::empty_tag('img', array('src' => $imageurl, 'class' => 'badge-image mb-2'));
-             $novo_html.='</a>';     
+            $novo_html.='</a>';     
             $novo_html.='<h5 class="card-title">'. $badge->name. '</h5>';
            
             $novo_html.= $badge->description . '<br/>';
              //$criteria = self::print_badge_criteria($badge);   
                
             $novo_html.='</center></div>';
-            $novo_html.='<div class="card-footer text-muted"><small>'.$awarded.'</small> <a href="'.$badgeurl.'" class="float-right"> + detalhes </a></div>';
+            $novo_html.='<div class="card-footer text-muted"><small>'.$awarded.'</small> <button type="button" class="btn btn-primary btn-sm float-right" data-toggle="modal" data-target="#modal'.$badge->id.'">  Critério</button></div>';
             $novo_html.='</div>';
+
+            $novo_html.='<div class="modal" id="modal'.$badge->id.'"  tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">'.$badge->name.' - Critérios </h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>'.self::print_badge_criteria($badge).'</p>
+      </div>
+    </div>
+  </div>
+</div>';
 
         }
 
