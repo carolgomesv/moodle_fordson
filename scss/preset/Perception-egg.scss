@@ -261,7 +261,8 @@ section#region-main .card, header#page-header .card {
 }
 
 #page-header .btn.btn-secondary{
-    background-color: $gray-800!importante;
+    background-color: $gray-200!importante;
+    color: $gray-800!importante;
 }
 
 .studentdash .btn, .teacherdash .btn, .enrollcodes .btn, .siteadminlink .btn {
