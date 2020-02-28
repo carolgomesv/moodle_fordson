@@ -33,56 +33,190 @@ require_once($CFG->libdir . '/tablelib.php');
 class theme_fordson_core_badges_renderer extends core_badges_renderer {
 
     /**
-     * Render a collection of badges.
+     * Render an issued badge.
      *
-     * @param \core_badges\output\badge_collection $badges
+     * @param \core_badges\output\issued_badge $ibadge
      * @return string
-     
-    protected function render_badge_collection(\core_badges\output\badge_collection $badges) {
-        $paging = new paging_bar($badges->totalcount, $badges->page, $badges->perpage, $this->page->url, 'page');
-        $htmlpagingbar = $this->render($paging);
-        $table = new html_table();
-        $table->attributes['class'] = 'collection';
+     */
+    protected function render_issued_badge(\core_badges\output\issued_badge $ibadge) {
+        global $USER, $CFG, $DB, $SITE;
+        $issued = $ibadge->issued;
+        $userinfo = $ibadge->recipient;
+        $badgeclass = $ibadge->badgeclass;
+        $badge = new badge($ibadge->badgeid);
+        $now = time();
+        $expiration = isset($issued['expires']) ? $issued['expires'] : $now + 86400;
+        $badgeimage = is_array($badgeclass['image']) ? $badgeclass['image']['id'] : $badgeclass['image'];
+        $languages = get_string_manager()->get_list_of_languages();
 
-        $sortbyname = $this->helper_sortable_heading(get_string('name'),
-                'name', $badges->sort, $badges->dir);
-        $sortbyawarded = $this->helper_sortable_heading(get_string('awardedtoyou', 'badges'),
-                'dateissued', $badges->sort, $badges->dir);
-        $table->head = array(
-                    get_string('badgeimage', 'badges'),
-                    $sortbyname,
-                    get_string('description', 'badges'),
-                    get_string('bcriteria', 'badges'),
-                    $sortbyawarded
-                );
-        $table->colclasses = array('badgeimage', 'name', 'description', 'criteria', 'awards');
-
-        foreach ($badges->badges as $badge) {
-            $badgeimage = print_badge_image($badge, $this->page->context, 'large');
-            $name = $badge->name;
-            $description = $badge->description;
-            $criteria = self::print_badge_criteria($badge);
-            if ($badge->dateissued) {
-                $icon = new pix_icon('i/valid',
-                            get_string('dateearned', 'badges',
-                                userdate($badge->dateissued, get_string('strftimedatefullshort', 'core_langconfig'))));
-                $badgeurl = new moodle_url('/badges/badge.php', array('hash' => $badge->uniquehash));
-                $awarded = $this->output->action_icon($badgeurl, $icon, null, null, true);
-            } else {
-                $awarded = "";
-            }
-            $row = array($badgeimage, $name, $description, $criteria, $awarded);
-            $table->data[] = $row;
+        $output = '';
+        $output .= html_writer::start_tag('div', array('id' => 'badge'));
+        $output .= html_writer::start_tag('div', array('id' => 'badge-image', 'class'=>'text-center'));
+        $output .= html_writer::empty_tag('img', array('src' => $badgeimage, 'alt' => $badge->name, 'width' => '200'));
+        if ($expiration < $now) {
+            $output .= $this->output->pix_icon('i/expired',
+            get_string('expireddate', 'badges', userdate($issued['expires'])),
+                'moodle',
+                array('class' => 'expireimage'));
         }
 
-        $htmltable = html_writer::table($table);
+        if ($USER->id == $userinfo->id && !empty($CFG->enablebadges)) {
+            $output .= $this->output->single_button(
+                        new moodle_url('/badges/badge.php', array('hash' => $issued['uid'], 'bake' => true)),
+                        get_string('download'),
+                        'POST');
+            if (!empty($CFG->badges_allowexternalbackpack) && ($expiration > $now) && badges_user_has_backpack($USER->id)) {
 
-        //return $htmlpagingbar . $htmltable . $htmlpagingbar;
-        return print_r($badges->badges);
+                if (badges_open_badges_backpack_api() == OPEN_BADGES_V1) {
+                    $assertion = new moodle_url('/badges/assertion.php', array('b' => $issued['uid']));
+                    $action = new component_action('click', 'addtobackpack', array('assertion' => $assertion->out(false)));
+                    $attributes = array(
+                            'type'  => 'button',
+                            'class' => 'btn btn-secondary m-1',
+                            'id'    => 'addbutton',
+                            'value' => get_string('addtobackpack', 'badges'));
+                    $tobackpack = html_writer::tag('input', '', $attributes);
+                    $this->output->add_action_handler($action, 'addbutton');
+                    $output .= $tobackpack;
+                } else {
+                    $assertion = new moodle_url('/badges/backpack-add.php', array('hash' => $issued['uid']));
+                    $attributes = ['class' => 'btn btn-secondary m-1', 'role' => 'button'];
+                    $tobackpack = html_writer::link($assertion, get_string('addtobackpack', 'badges'), $attributes);
+                    $output .= $tobackpack;
+                }
+            }
+        }
+        $output .= html_writer::end_tag('div');
+
+        $output .= html_writer::start_tag('div', array('id' => 'badge-details'));
+        // Recipient information.
+        $output .= $this->output->heading(get_string('recipientdetails', 'badges'), 3);
+        $dl = array();
+        if ($userinfo->deleted) {
+            $strdata = new stdClass();
+            $strdata->user = fullname($userinfo);
+            $strdata->site = format_string($SITE->fullname, true, array('context' => context_system::instance()));
+
+            $dl[get_string('name')] = get_string('error:userdeleted', 'badges', $strdata);
+        } else {
+            $dl[get_string('name')] = fullname($userinfo);
+        }
+        $output .= $this->definition_list($dl);
+
+        /*$output .= $this->output->heading(get_string('issuerdetails', 'badges'), 3);
+        $dl = array();
+        $dl[get_string('issuername', 'badges')] = $badge->issuername;
+        if (isset($badge->issuercontact) && !empty($badge->issuercontact)) {
+            $dl[get_string('contact', 'badges')] = obfuscate_mailto($badge->issuercontact);
+        }
+        $output .= $this->definition_list($dl);*/
+
+
+        $output .= $this->output->heading(get_string('badgedetails', 'badges'), 3);
+        $dl = array();
+        $dl[get_string('name')] = $badge->name;
+        if (!empty($badge->version)) {
+            $dl[get_string('version', 'badges')] = $badge->version;
+        }
+        /*if (!empty($badge->language)) {
+            $dl[get_string('language')] = $languages[$badge->language];
+        }*/
+        $dl[get_string('description', 'badges')] = $badge->description;
+        if (!empty($badge->imageauthorname)) {
+            $dl[get_string('imageauthorname', 'badges')] = $badge->imageauthorname;
+        }
+        if (!empty($badge->imageauthoremail)) {
+            $dl[get_string('imageauthoremail', 'badges')] =
+                    html_writer::tag('a', $badge->imageauthoremail, array('href' => 'mailto:' . $badge->imageauthoremail));
+        }
+        if (!empty($badge->imageauthorurl)) {
+            $dl[get_string('imageauthorurl', 'badges')] =
+                    html_writer::link($badge->imageauthorurl, $badge->imageauthorurl, array('target' => '_blank'));
+        }
+        if (!empty($badge->imagecaption)) {
+            $dl[get_string('imagecaption', 'badges')] = $badge->imagecaption;
+        }
+
+        if ($badge->type == BADGE_TYPE_COURSE && isset($badge->courseid)) {
+            $coursename = $DB->get_field('course', 'fullname', array('id' => $badge->courseid));
+            $dl[get_string('course')] = $coursename;
+        }
+        $dl[get_string('bcriteria', 'badges')] = self::print_badge_criteria($badge);
+        $output .= $this->definition_list($dl);
+
+        $output .= $this->output->heading(get_string('issuancedetails', 'badges'), 3);
+        $dl = array();
+        if (!is_numeric($issued['issuedOn'])) {
+            $issued['issuedOn'] = strtotime($issued['issuedOn']);
+        }
+        $dl[get_string('dateawarded', 'badges')] = userdate($issued['issuedOn']);
+        if (isset($issued['expires'])) {
+            if (!is_numeric($issued['expires'])) {
+                $issued['expires'] = strtotime($issued['expires']);
+            }
+            if ($issued['expires'] < $now) {
+                $dl[get_string('expirydate', 'badges')] = userdate($issued['expires']) . get_string('warnexpired', 'badges');
+
+            } else {
+                $dl[get_string('expirydate', 'badges')] = userdate($issued['expires']);
+            }
+        }
+
+        // Print evidence.
+        $agg = $badge->get_aggregation_methods();
+        $evidence = $badge->get_criteria_completions($userinfo->id);
+        $eids = array_map(function($o) {
+            return $o->critid;
+        }, $evidence);
+        unset($badge->criteria[BADGE_CRITERIA_TYPE_OVERALL]);
+
+        $items = array();
+        foreach ($badge->criteria as $type => $c) {
+            if (in_array($c->id, $eids)) {
+                if (count($c->params) == 1) {
+                    $items[] = get_string('criteria_descr_single_' . $type , 'badges') . $c->get_details();
+                } else {
+                    $items[] = get_string('criteria_descr_' . $type , 'badges',
+                            core_text::strtoupper($agg[$badge->get_aggregation_method($type)])) . $c->get_details();
+                }
+            }
+        }
+
+        $dl[get_string('evidence', 'badges')] = get_string('completioninfo', 'badges') . html_writer::alist($items, array(), 'ul');
+        $output .= $this->definition_list($dl);
+        $endorsement = $badge->get_endorsement();
+        if (!empty($endorsement)) {
+            $output .= self::print_badge_endorsement($badge);
+        }
+
+        $relatedbadges = $badge->get_related_badges(true);
+        $items = array();
+        foreach ($relatedbadges as $related) {
+            $relatedurl = new moodle_url('/badges/overview.php', array('id' => $related->id));
+            $items[] = html_writer::link($relatedurl->out(), $related->name, array('target' => '_blank'));
+        }
+        if (!empty($items)) {
+            $output .= $this->heading(get_string('relatedbages', 'badges'), 3);
+            $output .= html_writer::alist($items, array(), 'ul');
+        }
+
+        $alignments = $badge->get_alignments();
+        if (!empty($alignments)) {
+            $output .= $this->heading(get_string('alignment', 'badges'), 3);
+            $items = array();
+            foreach ($alignments as $alignment) {
+                $items[] = html_writer::link($alignment->targeturl, $alignment->targetname, array('target' => '_blank'));
+            }
+            $output .= html_writer::alist($items, array(), 'ul');
+        }
+        $output .= html_writer::end_tag('div');
+
+        return $output;
     }
-    */
 
     /**
+     *Muda formatação da página minhas conquistas
+     *
      * Render a collection of user badges.
      *
      * @param \core_badges\output\badge_user_collection $badges
@@ -101,43 +235,48 @@ class theme_fordson_core_badges_renderer extends core_badges_renderer {
             $badgeurl = new moodle_url('/badges/badge.php', array('hash' => $badge->uniquehash));
             $context = ($badge->type == BADGE_TYPE_SITE) ? context_system::instance() : context_course::instance($badge->courseid);
             $imageurl = moodle_url::make_pluginfile_url($context->id, 'badges', 'badgeimage', $badge->id, '/', 'f1', false);
-           
+            $description=$badge->description;
+
             if ($badge->dateissued) {
                 $awarded = '<span class="badge badge-success">Obtido</span>';
             } else {
-                $imageurl= 'http://10.10.2.24/egg/moodle/theme/image.php/fordson/theme/1578593667/badge_oculto';
+                
+                $imageurl= $this->image_url('badge-oculta', 'theme');
+                //$imageurl= 'http://10.10.2.24/egg/moodle/theme/image.php/fordson/theme/1578593667/badge_oculto';
                 $awarded = '<span class="badge badge-dark">Não obtido</span>';
                 $badgeurl= "#";
+                $description = "";
             }
             
             $novo_html.='<div class="card  dashboard-card"> <div class="card-body"><center>';
             $novo_html.='<a href="'.$badgeurl.'">';
-            $novo_html.=html_writer::empty_tag('img', array('src' => $imageurl, 'class' => 'badge-image mb-2'));
+            $novo_html.=html_writer::empty_tag('img', array('src' => $imageurl, 'class' => 'badge-image mb-2', 'width' => '100px'));
             $novo_html.='</a>';     
             $novo_html.='<h5 class="card-title">'. $badge->name. '</h5>';
-           
-            $novo_html.= $badge->description . '<br/>';
+
+
+            $novo_html.= $description. '<br/>';
              //$criteria = self::print_badge_criteria($badge);   
-               
+
             $novo_html.='</center></div>';
             $novo_html.='<div class="card-footer text-muted"><small>'.$awarded.'</small> <button type="button" class="btn btn-primary btn-sm float-right" data-toggle="modal" data-target="#modal'.$badge->id.'">  Critério</button></div>';
             $novo_html.='</div>';
 
             $novo_html.='<div class="modal" id="modal'.$badge->id.'"  tabindex="-1" role="dialog">
-  <div class="modal-dialog" role="document">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">'.$badge->name.' - Critérios </h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        <p>'.self::print_badge_criteria($badge).'</p>
-      </div>
-    </div>
-  </div>
-</div>';
+            <div class="modal-dialog" role="document">
+            <div class="modal-content">
+            <div class="modal-header">
+            <h5 class="modal-title">'.$badge->name.' - Critérios </h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+            <span aria-hidden="true">&times;</span>
+            </button>
+            </div>
+            <div class="modal-body">
+            <p>'.self::print_badge_criteria($badge).'</p>
+            </div>
+            </div>
+            </div>
+            </div>';
 
         }
 
