@@ -227,7 +227,7 @@ class theme_fordson_core_badges_renderer extends core_badges_renderer {
 
         $all_badges=badges_get_badges(1, 0, '', '', 0, 0, $USER->id) ;
 
-        $novo_html= '<h2>Minhas Conquistas</h2>';
+        $novo_html= '<h2>Meus Emblemas</h2>';
 
         $novo_html.='<div class="block-myoverview block-cards"><div class="card-deck dashboard-card-deck">';
 
@@ -284,4 +284,5 @@ class theme_fordson_core_badges_renderer extends core_badges_renderer {
 
         return $novo_html;
     }
+
 }

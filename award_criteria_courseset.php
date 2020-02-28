@@ -55,7 +55,7 @@ class award_criteria_courseset extends award_criteria {
                 Pulando o course -1 utilizado para armazenar o número mínimo de cursos
             */
             if ($p['course']==-1){ 
-                $output[] = "Concluir no mínimo " .$p['grade'] . " cursos.";
+                $output[] = "<b>Importante:</b> Concluir no mínimo " .$p['grade'] . " cursos da lista.";
                 continue;
             }
             /* fim alteração*/
