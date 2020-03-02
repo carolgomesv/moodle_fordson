@@ -52,9 +52,9 @@ class award_criteria_courseset extends award_criteria {
         $output = array();
         foreach ($this->params as $p) {
             /* Alteração Carol - número mínimo de cursos
-                Pulando o course -1 utilizado para armazenar o número mínimo de cursos
+                Pulando o course 0 utilizado para armazenar o número mínimo de cursos
             */
-            if ($p['course']==-1){ 
+            if ($p['course']==0){ 
                 $output[] = "<b>Importante:</b> Concluir no mínimo " .$p['grade'] . " cursos da lista.";
                 continue;
             }
@@ -129,8 +129,8 @@ class award_criteria_courseset extends award_criteria {
                 Criando registro inicial do valor mínimo
             */
         
-            if (!array_search(-1, $params)){ 
-                $params[] = '-1';
+            if (!array_search(0, $params)){ 
+                $params[] = '0';
             } 
             
             /* fim */
@@ -172,9 +172,9 @@ class award_criteria_courseset extends award_criteria {
                 Criando formulário para definição do valor mínimo
             */
 
-            if($p['course']==-1){
+            if($p['course']==0){
                 $param = array(
-                        'id' => -1,
+                        'id' => 0,
                         'checked' => true,
                         'name' => "Número minimo de cursos a ser concluído (só funciona com o critério qualquer cursos) - coloque o valor no campo nota.",
                         'error' => false
@@ -247,12 +247,12 @@ class award_criteria_courseset extends award_criteria {
             pegando valor mínimo
         */
         $minimum=1;
-        if (array_key_exists(-1, $this->params) && array_key_exists("grade", $this->params[-1])){ 
-            $minimum=$this->params[-1]["grade"];
+        if (array_key_exists(0, $this->params) && array_key_exists("grade", $this->params[0])){ 
+            $minimum=$this->params[0]["grade"];
         } 
         $count=0;
         foreach ($this->params as $param) {
-            if ($param['course']==-1){ 
+            if ($param['course']==0){ 
                 continue;
             }
             /* fim alteração */
@@ -293,7 +293,7 @@ class award_criteria_courseset extends award_criteria {
                         contabilizando cursos concluidos
                     */
                     $count++;
-                    if($minimum>-1){
+                    if($minimum>0){
                         if($count==$minimum){
                             return true;
                         }
@@ -325,6 +325,9 @@ class award_criteria_courseset extends award_criteria {
 
         if ($this->method == BADGE_CRITERIA_AGGREGATION_ANY) {
             foreach ($this->params as $param) {
+                if ($param['course']==0){ 
+                    continue;
+                }
                 $coursedata[] = " cc.course = :completedcourse{$param['course']} ";
                 $params["completedcourse{$param['course']}"] = $param['course'];
             }
@@ -333,9 +336,13 @@ class award_criteria_courseset extends award_criteria {
                 $join = " JOIN {course_completions} cc ON cc.userid = u.id AND
                           cc.timecompleted > 0 AND ({$extraon})";
             }
+
             return array($join, $where, $params);
         } else {
             foreach ($this->params as $param) {
+                if ($param['course']==0){ 
+                    continue;
+                }
                 $join .= " LEFT JOIN {course_completions} cc{$param['course']} ON
                           cc{$param['course']}.userid = u.id AND
                           cc{$param['course']}.course = :completedcourse{$param['course']} AND
