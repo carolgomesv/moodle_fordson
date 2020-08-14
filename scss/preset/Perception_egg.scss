@@ -13,23 +13,23 @@ $gray-base: #ccc !default;
 $black: #000 !default;
 $white: #ffffff !default;
 
-$blue: #1177d1 !default;
+$blue: #75CAEB !default;
 $indigo: #6610f2 !default;
 $purple: #613d7c !default;
 $pink: #e83e8c !default;
-$red: #d9534f !default;
-$orange: #ff9807 !default;
-$yellow: #f7fb0f !default;
-$green: #7fd80a !default;
-$teal: #60e8b5 !default;
+$red: #FF4136 !default;
+$orange: #EB661E !default;
+$yellow: #FF851B !default;
+$green: #28B62C !default;
+$teal: #0DA7AF !default;
 $cyan: #5bc0de !default;
 
-$primary: #000 !default;
-$secondary: $gray-300 !default;
+$primary: $teal !default;
+$secondary: $orange !default;
 $success: $green !default;
-$info: $cyan !default;
+$info: $blue !default;
 $warning: $orange !default;
-$danger: #c33e3e !default;
+$danger: $red !default;
 $light: $gray-100 !default;
 $dark: $gray-800 !default;
 
@@ -58,11 +58,7 @@ $card-bg: $white !default;
 $footer-bg: $gray-100 !default;
 $footer-link-color: $gray-800;
 
-//$perception-base: #14a9fe !default;
-//$perception-base: #a0bbd4 !default;
-// ***$perception-base: #90a3a9 !default;
-//$perception-base: #9FB3D1 !default;
-$perception-base: #82b8de !default;
+$perception-base: $primary !default;
 
 
 
@@ -271,6 +267,11 @@ header#page-header .card {
 }
 .page-header-headings h1 {
     font-weight: bold;
+}
+
+#page-header .btn.btn-secondary{
+    background-color: $gray-200!importante;
+    color: $gray-800!importante;
 }
 
 .studentdash .btn,
@@ -627,8 +628,9 @@ div#fordsonlogin {
 
 // Icon Navigation Styling
 .iconset .btn.btn-secondary {
-    //background-color: $dpsaccentcolor;
-    border-bottom: 7px solid $perception-base;
+    background-color: $gray-200;
+    border: 1px solid $gray-500;
+    border-bottom: 7px solid $primary;
     border-radius: $border-radius;
 }
 
@@ -690,4 +692,17 @@ i.fa.fa-video-camera.jitsivideoicon {
 span.jistibuttontext {
     vertical-align: middle;
     font-size: 22px;
+}
+
+
+/*questions*/
+.qnbutton{
+    background-color: $gray-200!important;
+    border-color: $gray-300!important;
+    border-bottom: 3px solid $gray-600!important;
+    color: $gray-600!important;
+    margin-right: 2px;
+    border-radius: 4px;
+
+    
 }
